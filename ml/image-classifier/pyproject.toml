@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "classifier"
+version = "0.1.0"
+description = "A Python classifier project."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["torch", "torchvision"]
+
+[project.scripts]
+classifier = "classifier.main:main"
+classifier-train = "classifier.train:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/classifier"]

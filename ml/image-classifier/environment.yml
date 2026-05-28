@@ -1,0 +1,11 @@
+name: classifier
+channels:
+  - pytorch
+dependencies:
+  - python=3.11
+  - pytorch
+  - torchvision
+  - pillow
+  - jpeg
+  - libpng
+  - pip

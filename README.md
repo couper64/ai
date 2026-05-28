@@ -5,6 +5,6 @@ ai - a collection of hardcoded snippets and texts related to Artificial Initelli
 # Documentation
 
 - [Machine Learning](doc/ml.md)
-- [Machine Learning Operations](doc/mlops.md)
+- [ML Operations](doc/mlops.md)
 - [ML System Lifecycle](doc/ml-system-lifecycle.md)
-- [Machine Learning Ecosystem](doc/ml-ecosystem.md)
+- [ML Ecosystem](doc/ml-ecosystem.md)
