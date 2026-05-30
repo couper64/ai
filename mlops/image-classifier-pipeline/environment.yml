@@ -1,4 +1,4 @@
-name: image-classifier
+name: image-classifier-pipeline
 dependencies:
   - python=3.11
   - pip

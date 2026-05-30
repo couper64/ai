@@ -1,6 +1,6 @@
 """Classifier package."""
 
-from classifier.model import Classifier
+from image_classifier.model import Classifier
 
 __all__ = ["Classifier", "__version__"]
 

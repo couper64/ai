@@ -2,22 +2,28 @@
 
 import argparse
 from pathlib import Path
-from typing import Any
 
 import torch
 from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
 
-from classifier.dataloader import create_dataloader
-from classifier.dataset import load_image_folder
-from classifier.model import Classifier
+from image_classifier.dataloader import create_dataloader
+from image_classifier.dataset import load_image_folder
+from image_classifier.model import Classifier
+from image_classifier.util import count_parameters, get_device, save_checkpoint
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Train an image classifier.")
     parser.add_argument("data_dir", type=Path, help="Folder with one subfolder per class.")
+    parser.add_argument(
+        "--validation-dir",
+        type=Path,
+        default=None,
+        help="Optional validation folder with the same class subfolders as data_dir.",
+    )
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -48,15 +54,13 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def get_device(requested_device: str) -> torch.device:
-    """Select the best available training device."""
-    if requested_device != "auto":
-        return torch.device(requested_device)
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    if torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
+def validate_classes(training_classes: list[str], validation_classes: list[str]) -> None:
+    """Ensure training and validation datasets use the same class order."""
+    if training_classes != validation_classes:
+        raise ValueError(
+            "Training and validation dataset classes do not match. "
+            f"training={training_classes}, validation={validation_classes}"
+        )
 
 
 def train_one_epoch(
@@ -120,41 +124,30 @@ def validate_one_epoch(
     return total_loss / total_samples, total_correct / total_samples
 
 
-def save_checkpoint(
-    output_path: Path,
-    model: Classifier,
-    class_to_idx: dict[str, int],
-    config: dict[str, Any],
-) -> None:
-    """Save model weights and class metadata."""
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(
-        {
-            "model_state_dict": model.state_dict(),
-            "class_to_idx": class_to_idx,
-            "config": config,
-        },
-        output_path,
-    )
-
-
 def main() -> None:
     """Train the classifier from a folder of labeled images."""
     args = parse_args()
     device = get_device(args.device)
 
     dataset = load_image_folder(root_dir=args.data_dir, image_size=args.image_size)
-    validation_size = int(len(dataset) * args.validation_split)
-    training_size = len(dataset) - validation_size
-    if training_size == 0 or validation_size == 0:
-        raise ValueError("Dataset is too small for the requested validation split.")
+    if args.validation_dir is not None:
+        training_dataset = dataset
+        validation_dataset = load_image_folder(root_dir=args.validation_dir, image_size=args.image_size)
+        validate_classes(training_classes=dataset.classes, validation_classes=validation_dataset.classes)
+        training_size = len(training_dataset)
+        validation_size = len(validation_dataset)
+    else:
+        validation_size = int(len(dataset) * args.validation_split)
+        training_size = len(dataset) - validation_size
+        if training_size == 0 or validation_size == 0:
+            raise ValueError("Dataset is too small for the requested validation split.")
 
-    generator = torch.Generator().manual_seed(args.seed)
-    training_dataset, validation_dataset = random_split(
-        dataset,
-        lengths=(training_size, validation_size),
-        generator=generator,
-    )
+        generator = torch.Generator().manual_seed(args.seed)
+        training_dataset, validation_dataset = random_split(
+            dataset,
+            lengths=(training_size, validation_size),
+            generator=generator,
+        )
     training_dataloader = create_dataloader(
         dataset=training_dataset,
         batch_size=args.batch_size,
@@ -176,6 +169,7 @@ def main() -> None:
         "num_classes": len(dataset.classes),
         "image_size": args.image_size,
         "classes": dataset.classes,
+        "validation_dir": str(args.validation_dir) if args.validation_dir is not None else None,
         "validation_split": args.validation_split,
         "seed": args.seed,
     }
@@ -185,6 +179,7 @@ def main() -> None:
         f"Training on {device} with {training_size} train images, "
         f"{validation_size} validation images, and {len(dataset.classes)} classes."
     )
+    print(f"Model parameters: {count_parameters(model):,}")
     for epoch in range(1, args.epochs + 1):
         train_loss, train_accuracy = train_one_epoch(
             model=model,

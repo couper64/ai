@@ -5,7 +5,7 @@ from pathlib import Path
 from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 
-from classifier.dataset import load_image_folder
+from image_classifier.dataset import load_image_folder
 
 
 def create_dataloader(
