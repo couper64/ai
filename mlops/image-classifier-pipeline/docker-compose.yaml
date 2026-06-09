@@ -1,0 +1,30 @@
+services:
+  image-classifier-pipeline:
+    build:
+      context: ../..
+      dockerfile: mlops/image-classifier-pipeline/Dockerfile
+      target: deploy
+      args:
+        TORCH_INDEX_URL: "${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}"
+    image: image-classifier-pipeline:latest
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      ARTIFACT_DIR: /artifacts
+      DEVICE: "${DEVICE:-auto}"
+      TOP_K: "${TOP_K:-3}"
+      COMPILE_MODEL: "${COMPILE_MODEL:-false}"
+      COMPILE_MODE: "${COMPILE_MODE:-default}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      LOG_COLOR: "${LOG_COLOR:-auto}"
+      SLOW_REQUEST_MS: "${SLOW_REQUEST_MS:-50}"
+    volumes:
+      - "${HOST_ARTIFACT_DIR:-../../ml/image-classifier/output/artifacts/20260530T165256Z}:/artifacts:ro"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

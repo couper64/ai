@@ -1,0 +1,25 @@
+services:
+  image-classifier-frontend-v2:
+    build:
+      context: .
+      target: deploy
+    image: image-classifier-frontend-v2:latest
+    ports:
+      - "${GRADIO_PORT:-7860}:7860"
+    environment:
+      IMAGE_CLASSIFIER_API_URL: "${IMAGE_CLASSIFIER_API_URL:-http://host.docker.internal:8000/predict}"
+      IMAGE_CLASSIFIER_HEALTH_URL: "${IMAGE_CLASSIFIER_HEALTH_URL:-http://host.docker.internal:8000/health}"
+      TOP_K: "${TOP_K:-3}"
+      HOST: 0.0.0.0
+      PORT: 7860
+      GRADIO_ROOT_PATH: "${GRADIO_ROOT_PATH:-}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import os, urllib.request; path = os.environ.get('GRADIO_ROOT_PATH') or '/'; path = path if path.startswith('/') else '/' + path; urllib.request.urlopen('http://127.0.0.1:7860' + path, timeout=5)"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

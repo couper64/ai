@@ -1,0 +1,4 @@
+name: image-classifier-frontend-v1
+dependencies:
+  - python=3.11
+  - pip

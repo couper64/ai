@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "image-classifier-frontend-v2"
+version = "0.1.0"
+description = "Gradio frontend for the image classifier API."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "gradio",
+    "httpx",
+    "pillow",
+]
+
+[project.urls]
+Repository = "https://github.com/couper64/ai"
+
+[project.scripts]
+image-classifier-frontend-v2 = "image_classifier_frontend_v2.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/image_classifier_frontend_v2"]

@@ -1,0 +1,23 @@
+services:
+  image-classifier-frontend-v1:
+    build:
+      context: .
+      target: deploy
+    image: image-classifier-frontend-v1:latest
+    ports:
+      - "${STREAMLIT_PORT:-8501}:8501"
+    environment:
+      IMAGE_CLASSIFIER_API_URL: "${IMAGE_CLASSIFIER_API_URL:-http://host.docker.internal:8000/predict}"
+      IMAGE_CLASSIFIER_HEALTH_URL: "${IMAGE_CLASSIFIER_HEALTH_URL:-http://host.docker.internal:8000/health}"
+      TOP_K: "${TOP_K:-3}"
+      STREAMLIT_SERVER_BASE_URL_PATH: "${STREAMLIT_SERVER_BASE_URL_PATH:-app/classifier/image/v1}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import os, urllib.request; base = (os.environ.get('STREAMLIT_SERVER_BASE_URL_PATH') or '').strip('/'); path = f'/{base}/_stcore/health' if base else '/_stcore/health'; urllib.request.urlopen(f'http://127.0.0.1:8501{path}', timeout=5)"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

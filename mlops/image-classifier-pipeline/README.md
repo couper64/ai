@@ -68,6 +68,40 @@ export LOG_COLOR=auto
 curl http://localhost:8000/health
 ```
 
+## Docker
+
+Build and run the API container with the default packaged artifact:
+
+```bash
+docker compose up -d --build
+```
+
+By default, Compose mounts:
+
+```text
+../../ml/image-classifier/output/artifacts/20260530T165256Z -> /artifacts
+```
+
+Override the mounted artifact or service port with environment variables:
+
+```bash
+HOST_ARTIFACT_DIR=../../ml/image-classifier/output/artifacts/<run-id> \
+API_PORT=8000 \
+docker compose up -d --build
+```
+
+The image installs CPU PyTorch wheels by default. Override `TORCH_INDEX_URL` if you need a different PyTorch build:
+
+```bash
+TORCH_INDEX_URL=https://download.pytorch.org/whl/cu130 docker compose build
+```
+
+Check container health:
+
+```bash
+curl http://localhost:8000/health
+```
+
 ## Predict
 
 Upload an image and return top-k predictions:

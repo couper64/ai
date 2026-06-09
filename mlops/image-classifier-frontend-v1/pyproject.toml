@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "image-classifier-frontend-v1"
+version = "0.1.0"
+description = "Streamlit frontend for the image classifier API."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx",
+    "pillow",
+    "streamlit",
+]
+
+[project.urls]
+Repository = "https://github.com/couper64/ai"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/image_classifier_frontend_v1"]
